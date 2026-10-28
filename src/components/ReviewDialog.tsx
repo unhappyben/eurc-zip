@@ -1,4 +1,4 @@
-import { ArrowRight, ShieldCheck, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import type { RouteInfo } from "../hooks/useRoutes";
 import { nativeFeeUsd, useEthPrice } from "../hooks/useEthPrice";
 import {
@@ -33,37 +33,38 @@ export function ReviewDialog({
   const source = route.source.network;
   const destination = route.destination.network;
   const feeUsd = nativeFeeUsd(BigInt(quote.feeTotalAmount), source.chain.nativeCurrency.symbol, ethPrice);
+
   return (
-    <div className="modal-backdrop" onMouseDown={onClose}>
-      <section className="review-modal" role="dialog" aria-modal="true" aria-labelledby="review-title" onMouseDown={(event) => event.stopPropagation()}>
-        <button className="icon-button modal-close" aria-label="Close review" onClick={onClose}><X size={20} /></button>
-        <p className="eyebrow">{source.shortName.toUpperCase()} · REAL TRANSFER</p>
-        <h2 id="review-title">Check your ticket.</h2>
-        <div className="review-amount"><img src="/eurc.png" alt="" />{formatEurc(amount, 6)} <span>EURC</span></div>
-        <div className="review-route">
-          <div><span>From</span><strong>{source.shortName}</strong></div>
-          <ArrowRight size={22} />
-          <div><span>To</span><strong>{destination.shortName}</strong></div>
+    <div className="review-screen" role="dialog" aria-modal="true" aria-labelledby="review-title">
+      <header className="transfer-header">
+        <div className="wordmark"><img src="/eurc.png" alt="" />eurc.zip</div>
+        <button className="icon-button" aria-label="Close review" onClick={onClose}><X size={20} /></button>
+      </header>
+      <main className="review-main-sketch">
+        <div className="review-amount-large" id="review-title">{formatEurc(amount, 6)}<span className="sketch-token">eurc</span></div>
+        <div className="review-route-large">
+          <div className="review-network">{source.shortName.toLowerCase()}</div>
+          <span>→</span>
+          <div className="review-network">{destination.shortName.toLowerCase()}</div>
         </div>
-        <dl className="review-details">
-          <div><dt>Recipient</dt><dd title={recipient}>{shortAddress(recipient)}</dd></div>
-          <div><dt>Transfer</dt><dd>{speed === "fast" ? "Fast" : "Standard"}</dd></div>
-          <div><dt>Delivery</dt><dd>{delivery === "forwarded" ? "Circle mint" : "Self mint on destination"}</dd></div>
-          <div><dt>You receive</dt><dd>{formatEurc(amount, 6)} native EURC</dd></div>
-          <div><dt>{delivery === "forwarded" ? "CCTP + forwarding fee" : "CCTP fee"}</dt><dd>{formatNative(BigInt(quote.feeTotalAmount))} {source.chain.nativeCurrency.symbol}{feeUsd && <span className="fee-usd"> · {feeUsd}</span>}</dd></div>
+        <dl className="review-detail-row">
+          <div><dt>recipient</dt><dd title={recipient}>{shortAddress(recipient)}</dd></div>
+          <div><dt>speed</dt><dd>{speed}</dd></div>
+          <div><dt>delivery</dt><dd>{delivery === "forwarded" ? "circle mint" : "self mint"}</dd></div>
         </dl>
-        <details className="fee-details">
-          <summary>See every fee item</summary>
-          {quote.items.map((item, index) => (
-            <div key={`${item.type}-${index}`}><span>{item.type}</span><strong>{formatNative(BigInt(item.amount))} {source.chain.nativeCurrency.symbol}</strong></div>
-          ))}
-        </details>
-        <div className="mainnet-warning"><ShieldCheck size={20} /><p>This uses real EURC and real {source.chain.nativeCurrency.symbol}. Approval is exact, never unlimited.{delivery === "manual" ? ` You will switch to ${destination.shortName} and pay its gas to mint after attestation.` : " Circle will handle the destination mint."}</p></div>
-        <button className="primary-button full-width confirm-button" onClick={onConfirm}>
-          Confirm in wallet <ArrowRight size={18} />
-        </button>
-        <p className="fine-print centre">A fresh quote is fetched immediately before the transfer.</p>
-      </section>
+        <div className="review-fee-large">
+          {delivery === "forwarded" ? "CCTP + forwarded mint" : "CCTP · destination gas separate"} {formatNative(BigInt(quote.feeTotalAmount))} {source.chain.nativeCurrency.symbol}{feeUsd && ` · ${feeUsd}`}
+          <details>
+            <summary>fee items</summary>
+            {quote.items.map((item, index) => (
+              <div key={`${item.type}-${index}`}><span>{item.type.toLowerCase()}</span><strong>{formatNative(BigInt(item.amount))} {source.chain.nativeCurrency.symbol}</strong></div>
+            ))}
+          </details>
+        </div>
+        <button className="review-confirm-large" onClick={onConfirm}>confirm in wallet <ArrowRight size={21} /></button>
+        <button className="review-back" onClick={onClose}><ArrowLeft size={13} /> back</button>
+        <p className="review-note">real eurc · exact approval · no added fees{delivery === "manual" ? ` · you pay ${destination.shortName.toLowerCase()} gas` : ""}</p>
+      </main>
     </div>
   );
 }
